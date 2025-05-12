@@ -2,7 +2,6 @@ FROM node:18-alpine as build
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
 
 # Install dependencies
