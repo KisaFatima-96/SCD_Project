@@ -31,7 +31,14 @@ jobs:
     - name: Build and push frontend image
       run: |
         cd app/frontend
-        docker build -t bilalkhan980/scd_project-frontend:latest .
+        # List files to verify structure
+        echo "Listing frontend directory structure:"
+        ls -la
+        echo "Listing src directory:"
+        ls -la src
+
+        # Build with verbose output
+        docker build --progress=plain -t bilalkhan980/scd_project-frontend:latest .
         docker push bilalkhan980/scd_project-frontend:latest
 
     - name: Set up kubectl
