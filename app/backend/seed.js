@@ -4,7 +4,6 @@ const Product = require('./models/Product');
 
 dotenv.config();
 
-// Sample product data
 const products = [
   {
     name: 'Smartphone X',
