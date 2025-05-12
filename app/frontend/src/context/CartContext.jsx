@@ -53,7 +53,7 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
-  // Calculate total price
+
   const getTotalPrice = () => {
     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
