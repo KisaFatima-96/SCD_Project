@@ -32,7 +32,7 @@ export const CartProvider = ({ children }) => {
     setCartItems(prevItems => prevItems.filter(item => item._id !== productId));
   };
 
-  // Update item quantity
+  
   const updateQuantity = (productId, quantity) => {
     if (quantity <= 0) {
       removeFromCart(productId);
