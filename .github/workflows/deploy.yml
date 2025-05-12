@@ -23,18 +23,16 @@ jobs:
         password: "Pakistan@1947"
 
     - name: Build and push backend image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./app/backend
-        push: true
-        tags: bilalkhan980/scd_project-backend:latest
+      run: |
+        cd app/backend
+        docker build -t bilalkhan980/scd_project-backend:latest .
+        docker push bilalkhan980/scd_project-backend:latest
 
     - name: Build and push frontend image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./app/frontend
-        push: true
-        tags: bilalkhan980/scd_project-frontend:latest
+      run: |
+        cd app/frontend
+        docker build -t bilalkhan980/scd_project-frontend:latest .
+        docker push bilalkhan980/scd_project-frontend:latest
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
