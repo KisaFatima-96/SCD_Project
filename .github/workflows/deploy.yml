@@ -1,4 +1,4 @@
-name: Build and Deploy to Minikube
+name: Build and Deploy to Kubernetes
 
 on:
   push:
@@ -6,44 +6,64 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Docker to use Minikube's environment
-      run: |
-        echo "Configuring Docker to use Minikube's daemon..."
-        eval $(minikube docker-env)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    - name: Build Docker images
+    - name: Login to Docker Hub
       run: |
-        # Build backend image
-        cd app/backend
-        docker build -t scd_project-backend:latest .
+        echo "Logging in to Docker Hub..."
+        echo "Pakistan" | docker login -u bilalkhan980 --password-stdin
 
-        # Build frontend image
-        cd ../frontend
-        docker build -t scd_project-frontend:latest .
+    - name: Build and push backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./app/backend
+        push: true
+        tags: bilalkhan980/scd_project-backend:latest
 
-    - name: Load images into Minikube
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./app/frontend
+        push: true
+        tags: bilalkhan980/scd_project-frontend:latest
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Set up Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Get Minikube status
+      run: minikube status
+
+    - name: Update Kubernetes deployment files
       run: |
-        minikube image load scd_project-backend:latest
-        minikube image load scd_project-frontend:latest
+        # Update image names in deployment files to use Docker Hub images
+        sed -i 's|image: scd_project-backend:latest|image: bilalkhan980/scd_project-backend:latest|g' k8s/app-deployment.yaml
+        sed -i 's|image: scd_project-frontend:latest|image: bilalkhan980/scd_project-frontend:latest|g' k8s/app-deployment.yaml
+        sed -i 's|imagePullPolicy: Never|imagePullPolicy: Always|g' k8s/app-deployment.yaml
 
-    - name: Apply Kubernetes configurations
+        # Show the changes
+        cat k8s/app-deployment.yaml
+
+    - name: Deploy to Kubernetes
       run: |
-        # Apply namespace
+        # Create namespace
         kubectl apply -f k8s/namespace.yaml
 
         # Apply deployments and services
         kubectl apply -f k8s/app-deployment.yaml
         kubectl apply -f k8s/app-service.yaml
 
-    - name: Wait for deployments to be ready
-      run: |
+        # Wait for deployments to be ready
         kubectl -n ecommerce-app rollout status deployment/backend
         kubectl -n ecommerce-app rollout status deployment/frontend
 
@@ -55,7 +75,17 @@ jobs:
         echo "Frontend service:"
         kubectl -n ecommerce-app get service frontend
 
-    - name: Get access URL
+    - name: Get Minikube IP
+      run: |
+        echo "Minikube IP:"
+        minikube ip
+
+    - name: Get NodePort
+      run: |
+        echo "Frontend NodePort:"
+        kubectl -n ecommerce-app get service frontend -o=jsonpath='{.spec.ports[0].nodePort}'
+
+    - name: Access URL
       run: |
         echo "Access the application at:"
-        minikube service frontend -n ecommerce-app --url
+        echo "http://$(minikube ip):$(kubectl -n ecommerce-app get service frontend -o=jsonpath='{.spec.ports[0].nodePort}')"
