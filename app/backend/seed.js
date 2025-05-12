@@ -47,7 +47,6 @@ const products = [
   }
 ];
 
-// Connect to MongoDB and seed data
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce')
   .then(async () => {
     console.log('Connected to MongoDB');
