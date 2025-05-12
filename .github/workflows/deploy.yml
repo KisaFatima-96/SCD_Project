@@ -21,7 +21,7 @@ jobs:
     - name: Build Docker images
       run: |
         # Build backend image
-        cd SCD_Project/app/backend
+        cd app/backend
         docker build -t scd_project-backend:latest .
 
         # Build frontend image
@@ -36,11 +36,11 @@ jobs:
     - name: Apply Kubernetes configurations
       run: |
         # Apply namespace
-        kubectl apply -f SCD_Project/k8s/namespace.yaml
+        kubectl apply -f k8s/namespace.yaml
 
         # Apply deployments and services
-        kubectl apply -f SCD_Project/k8s/app-deployment.yaml
-        kubectl apply -f SCD_Project/k8s/app-service.yaml
+        kubectl apply -f k8s/app-deployment.yaml
+        kubectl apply -f k8s/app-service.yaml
 
     - name: Wait for deployments to be ready
       run: |
