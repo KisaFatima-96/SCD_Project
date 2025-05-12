@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Product = require('./models/Product');
 
-// Load environment variables
 dotenv.config();
 
 // Sample product data
