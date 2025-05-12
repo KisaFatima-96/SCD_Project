@@ -1,0 +1,61 @@
+name: Build and Deploy to Minikube
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker to use Minikube's environment
+      run: |
+        echo "Configuring Docker to use Minikube's daemon..."
+        eval $(minikube docker-env)
+
+    - name: Build Docker images
+      run: |
+        # Build backend image
+        cd SCD_Project/app/backend
+        docker build -t scd_project-backend:latest .
+
+        # Build frontend image
+        cd ../frontend
+        docker build -t scd_project-frontend:latest .
+
+    - name: Load images into Minikube
+      run: |
+        minikube image load scd_project-backend:latest
+        minikube image load scd_project-frontend:latest
+
+    - name: Apply Kubernetes configurations
+      run: |
+        # Apply namespace
+        kubectl apply -f SCD_Project/k8s/namespace.yaml
+
+        # Apply deployments and services
+        kubectl apply -f SCD_Project/k8s/app-deployment.yaml
+        kubectl apply -f SCD_Project/k8s/app-service.yaml
+
+    - name: Wait for deployments to be ready
+      run: |
+        kubectl -n ecommerce-app rollout status deployment/backend
+        kubectl -n ecommerce-app rollout status deployment/frontend
+
+    - name: Display service information
+      run: |
+        echo "Application deployed successfully!"
+        echo "Backend service:"
+        kubectl -n ecommerce-app get service backend
+        echo "Frontend service:"
+        kubectl -n ecommerce-app get service frontend
+
+    - name: Get access URL
+      run: |
+        echo "Access the application at:"
+        minikube service frontend -n ecommerce-app --url
